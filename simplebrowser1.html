@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Untitled</title>
+
+<style>
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #0f2027;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  color: white;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+header {
+  background: #121212;
+  padding: 10px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+input, select, button {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #1e1e1e;
+  color: white;
+}
+
+button {
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#warning {
+  display: none;
+  background: #ff9800;
+  color: #000;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+#loading {
+  display: none;
+  text-align: center;
+  padding: 6px;
+  font-weight: 600;
+}
+
+iframe, pre {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: white;
+  color: black;
+}
+
+pre {
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+input#url {
+  flex: 1;
+  min-width: 0;
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+  <input
+    id="url"
+    placeholder="Enter URL"
+    size="40"
+    value="home://home"
+  >
+
+  <select id="mode">
+    <option value="direct">Direct</option>
+    <option value="fetch">Fetch</option>
+    <option value="source">Source</option>
+  </select>
+
+  <button onclick="go()">Go</button>
+</header>
+
+<div id="warning"></div>
+<div id="loading">Loading…</div>
+
+<iframe
+  id="view"
+  sandbox="allow-same-origin allow-scripts allow-forms"
+></iframe>
+
+<pre id="source" style="display:none"></pre>
+
+</div>
+
+<script>
+const iframe = document.getElementById("view");
+const source = document.getElementById("source");
+const loading = document.getElementById("loading");
+const warning = document.getElementById("warning");
+
+function showLoading(on) {
+  loading.style.display = on ? "block" : "none";
+}
+
+function showWarning(msg) {
+  warning.textContent = "⚠️ " + msg;
+  warning.style.display = "block";
+}
+
+function clearUI() {
+  warning.style.display = "none";
+  iframe.style.display = "block";
+  source.style.display = "none";
+}
+
+function normalize(url) {
+  if (url === "home://home") return url;
+
+  if (!/^https?:\/\//i.test(url)) {
+    return "https://" + url;
+  }
+
+  return url;
+}
+
+
+/* =========================
+   HOME
+========================= */
+
+function loadHome() {
+  iframe.removeAttribute("src");
+
+  iframe.srcdoc = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #0f2027;
+  color: white;
+}
+
+.home {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.top {
+  padding: 20px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: #1e1e1e;
+  color: #aaa;
+}
+
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  margin-top: -80px;
+}
+
+.title {
+  font-size: 42px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #aaa;
+  font-size: 15px;
+  margin-bottom: 30px;
+}
+
+.search {
+  width: min(650px, 95vw);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  background: #181818;
+  border: 1px solid #333;
+  border-radius: 30px;
+  padding: 0 8px 0 20px;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.search:focus-within {
+  border-color: #0072ff;
+  box-shadow: 0 0 20px rgba(0,114,255,.15);
+}
+
+.search-icon {
+  font-size: 20px;
+  color: #888;
+  margin-right: 12px;
+}
+
+#query {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: white;
+  font-size: 16px;
+}
+
+#query::placeholder {
+  color: #777;
+}
+
+.search button {
+  height: 42px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 22px;
+  background: linear-gradient(135deg,#00c6ff,#0072ff);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search button:hover {
+  filter: brightness(1.1);
+}
+
+.info {
+  margin-top: 18px;
+  color: #777;
+  font-size: 12px;
+}
+
+.bottom {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 12px;
+}
+
+@media(max-width:600px) {
+  .title {
+    font-size: 32px;
+  }
+
+  .search {
+    height: 52px;
+  }
+
+  .search button {
+    padding: 0 16px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="home">
+
+  <div class="top">
+    <div class="logo">Lightweight</div>
+    <div class="badge">v1.2</div>
+  </div>
+
+  <div class="center">
+
+    <div class="title">Search the Web</div>
+
+    <div class="subtitle">
+      Search Google directly from Web Viewer
+    </div>
+
+    <form class="search" id="searchForm">
+
+      <div class="search-icon">⌕</div>
+
+      <input
+        id="query"
+        type="text"
+        autocomplete="off"
+        placeholder="Search Google..."
+        autofocus
+      >
+
+      <button type="submit">
+        Search
+      </button>
+
+    </form>
+
+    <div class="info">
+      Google search
+    </div>
+
+  </div>
+
+  <div class="bottom">
+    Enter a URL above to browse, or search Google here.
+  </div>
+
+</div>
+
+<script>
+const form = document.getElementById("searchForm");
+const query = document.getElementById("query");
+
+form.addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const q = query.value.trim();
+
+  if (!q) return;
+
+  const googleURL =
+    "https://www.google.com/search?q=" +
+    encodeURIComponent(q) +
+    "&igu=1";
+
+  /
+  window.parent.postMessage({
+    type: "navigate",
+    url: googleURL
+  }, "*");
+});
+
+query.focus();
+<\/script>
+
+</body>
+</html>
+`;
+
+  /*
+   * Receive navigation request from the home iframe.
+   */
+  window.addEventListener("message", function handler(e) {
+
+    if (!e.data || e.data.type !== "navigate") {
+      return;
+    }
+
+    document.getElementById("url").value = e.data.url;
+
+    /*
+     * Automatically use Direct mode.
+     */
+    document.getElementById("mode").value = "direct";
+
+    go();
+
+  });
+}
+
+
+/* =========================
+   1. DIRECT
+========================= */
+
+function loadDirect(url) {
+  iframe.removeAttribute("srcdoc");
+
+  iframe.onload = () => {
+    showLoading(false);
+  };
+
+  iframe.onerror = () => {
+    showWarning("Failed to load the page directly.");
+    showLoading(false);
+  };
+
+  iframe.src = url;
+}
+
+
+/* =========================
+   2. FETCH
+========================= */
+
+async function loadFetch(url) {
+  try {
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        "HTTP " + response.status
+      );
+    }
+
+    const html = await response.text();
+
+    /*
+     * Parse the fetched HTML
+     */
+    const parser = new DOMParser();
+
+    const doc = parser.parseFromString(
+      html,
+      "text/html"
+    );
+
+    /*
+     * Make relative URLs resolve against
+     * the original website.
+     */
+    const base = doc.createElement("base");
+    base.href = url;
+
+    if (doc.head) {
+      doc.head.prepend(base);
+    }
+
+    /*
+     * Display the fetched HTML.
+     */
+    iframe.removeAttribute("src");
+
+    iframe.srcdoc =
+      "<!DOCTYPE html>" +
+      doc.documentElement.outerHTML;
+
+    showLoading(false);
+
+  } catch (error) {
+
+    console.error(error);
+
+    showWarning(
+      "Fetch failed. The site may not allow CORS requests."
+    );
+
+    showLoading(false);
+  }
+}
+
+
+/* =========================
+   3. SOURCE
+========================= */
+
+async function loadSource(url) {
+  try {
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        "HTTP " + response.status
+      );
+    }
+
+    const text = await response.text();
+
+    iframe.style.display = "none";
+    source.style.display = "block";
+
+    source.textContent = text;
+
+    showLoading(false);
+
+  } catch (error) {
+
+    console.error(error);
+
+    showWarning(
+      "Unable to fetch the source. The site may not allow CORS."
+    );
+
+    showLoading(false);
+  }
+}
+
+
+/* =========================
+   GO
+========================= */
+
+function go() {
+
+  clearUI();
+
+  const input =
+    document.getElementById("url").value.trim();
+
+  const mode =
+    document.getElementById("mode").value;
+
+  if (!input || input === "home://home") {
+    loadHome();
+    showLoading(false);
+    return;
+  }
+
+  const url = normalize(input);
+
+  showLoading(true);
+
+  if (mode === "direct") {
+    loadDirect(url);
+  }
+
+  else if (mode === "fetch") {
+    loadFetch(url);
+  }
+
+  else if (mode === "source") {
+    loadSource(url);
+  }
+}
+
+
+/* =========================
+   START
+========================= */
+
+loadHome();
+</script>
+
+</body>
+</html>
